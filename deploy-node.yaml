@@ -1,0 +1,76 @@
+---
+- name: Install node and npm
+  hosts: 16.171.19.159
+  become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3.9
+  tasks : 
+    - name: Update yum repo and cache
+      yum: update_cache=yes 
+    - name: Install nodejs and npm
+      yum:
+        pkg:
+          - nodejs
+          - npm
+
+
+- name: Create a new linux user for node app
+  hosts: 16.171.19.159
+  become: yes
+  vars_files:
+    project-vars
+  tasks:
+    - name: Create linux user
+      user:
+        name: "{{linux_name}}" 
+        comment: Node User # Montassar Admin
+        group: adm
+      register: user_creation_result
+    - debug: msg={{user_creation_result.uid}}
+
+
+- name: Deploy nodejs app
+  hosts: 16.171.19.159
+  become: True # or yes
+  become_user: "{{linux_name}}"
+  #### Option 1 for each play
+  # vars:
+  #   ansible_python_interpreter: /usr/bin/python3.9
+  #   location: /home/montassar/devops-with-nana/ansible/nodejs-app
+  #   version: 1.0.0
+  #   destination: /home/montassar
+  #### Option 2 which is used for filling values within all plays so better than declaring vars in each play (Option1) "ex: {{linux_name}} for user in two plays"
+  # execute on terminal : ansible-playbook -i hosts deploy-node.yaml -e "version=1.0.0 location=/home/montassar/devops-with-nana/ansible/nodejs-app destination=/home/montassar"
+  #### Option3 for external vars file (see project-vars file)
+  vars_files:
+    project-vars
+  tasks:
+    ################# Option 1
+    - name: Copy nodejs folder to a server
+      copy:
+        src: "{{location}}/nodejs-app-{{version}}.tgz"
+        dest: "{{destination}}/app-{{version}}.tgz" # /home/ec2-user/app-1.0.0.tgz
+    - name: Unpack the nodejs file
+      unarchive:
+        src: "{{destination}}/app-{{version}}.tgz" # /home/ec2-user/app-1.0.0.tgz
+        dest: "{{destination}}" # /home/ec2-user/
+        remote_src: yes
+    ################# Option 2 : Or use only one step to unpack from local src to remote dest
+    # - name: Unpack the nodejs file
+    #   unarchive:
+    #     src: /home/montassar/devops-with-nana/ansible/nodejs-app/nodejs-app-1.0.0.tgz
+    #     dest: /home/ec2-user/ or /home/montassar/
+    - name: Install dependencies
+      npm:  
+        path: "{{destination}}/package" # /home/ec2-user/package
+    - name: Start the application
+      command:
+        chdir: "{{destination}}/package/app" # /home/ec2-user/package/app
+        cmd: node server
+      async: 1000
+      poll: 0
+    - name: Ensure app is running
+      shell: ps aux | grep node
+      register: app_status
+    - debug: msg={{app_status}} #{{app_status.stdout_lines}}
+
