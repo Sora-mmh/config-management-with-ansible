@@ -1,6 +1,6 @@
 ---
 - name: Wait for SSH connection
-  hosts: all
+  hosts: aws_ec2 # all
   gather_facts: False
   vars:
       ansible_connection: local
@@ -15,7 +15,7 @@
         host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
     
 - name: Install Docker
-  hosts: all # dcoker_server
+  hosts: aws_ec2 # all # docker_server
   become: yes
   # become_user: root
   tasks:
@@ -30,7 +30,7 @@
         state: started
 
 - name: Create a new linux user
-  hosts: all
+  hosts: aws_ec2 # all
   become: yes
   vars_files:
     project-vars
@@ -41,7 +41,7 @@
         groups: "{{user_groups}}"
 
 - name: Install Docker-compose
-  hosts: all
+  hosts: aws_ec2 # all
   become: yes
   vars_files:
     project-vars
@@ -69,14 +69,14 @@
 #         source: pull
 
 - name: Start docker containers
-  hosts: all
+  hosts: aws_ec2 # all
   become: yes
   vars_files:
     project-vars
   ### Option 1 for PASS to login into dockerhub
-  vars_prompt:
-    - name: docker_password_prompt
-      prompt: Enter password for docker registry
+  # vars_prompt:
+  #   - name: docker_password_prompt
+  #     prompt: Enter password for docker registry
   ### Option 2 for PASS to login into dockerhub
   # vars_files:
   #   - project-vars
@@ -91,7 +91,7 @@
     - name: Docker login
       docker_login: 
         username: sorammh8
-        password: "{{docker_password}}" # "{{docker_password_prompt}}" # or {{docker_password}} for option 2
+        password: "{{docker_password}}" # "{{docker_password_prompt}}"  for option 1 or {{docker_password}} for option 2
     - name: Start containers from compose
       community.docker.docker_compose_v2:
         project_src: /home/{{linux_name}}
