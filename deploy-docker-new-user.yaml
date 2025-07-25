@@ -1,21 +1,36 @@
 ---
-# - name: Install Docker
-#   hosts: docker_server
-#   become: yes
-#   # become_user: root
-#   tasks:
-#     - name: Make sur Docker is installed
-#       yum:  
-#         name: docker
-#         update_cache: yes
-#         state: present
-#     - name: Ensure docker is running
-#       systemd:
-#         name: docker
-#         state: started
+- name: Wait for SSH connection
+  hosts: all
+  gather_facts: False
+  vars:
+      ansible_connection: local
+      ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: Ensure SSH port open
+      wait_for:
+        port: 22
+        delay: 10
+        timeout: 100
+        search_regex: OpenSSH
+        host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+    
+- name: Install Docker
+  hosts: all # dcoker_server
+  become: yes
+  # become_user: root
+  tasks:
+    - name: Make sur Docker is installed
+      yum:  
+        name: docker
+        update_cache: yes
+        state: present
+    - name: Ensure docker is running
+      systemd:
+        name: docker
+        state: started
 
 - name: Create a new linux user
-  hosts: docker_server
+  hosts: all
   become: yes
   vars_files:
     project-vars
@@ -26,7 +41,7 @@
         groups: "{{user_groups}}"
 
 - name: Install Docker-compose
-  hosts: docker_server
+  hosts: all
   become: yes
   vars_files:
     project-vars
@@ -46,7 +61,7 @@
         mode: +x
 
 # - name: Test docker pull
-#   hosts: docker_server
+#   hosts: all
 #   tasks:
 #     - name: Pull redis
 #       docker_image:
@@ -54,7 +69,7 @@
 #         source: pull
 
 - name: Start docker containers
-  hosts: docker_server
+  hosts: all
   become: yes
   vars_files:
     project-vars
@@ -76,7 +91,7 @@
     - name: Docker login
       docker_login: 
         username: sorammh8
-        password: "{{docker_password_prompt}}" # or {{docker_password}} for option 2
+        password: "{{docker_password}}" # "{{docker_password_prompt}}" # or {{docker_password}} for option 2
     - name: Start containers from compose
       community.docker.docker_compose_v2:
         project_src: /home/{{linux_name}}

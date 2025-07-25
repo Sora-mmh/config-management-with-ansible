@@ -29,7 +29,9 @@ variable env_prefix {}
 variable my_ip {}
 variable instance_type {}
 # variable public_key {}
+variable image_name {}
 variable public_key_location {}
+variable ssh_key_private {}
 
 resource "aws_vpc" "montapp-vpc" { 
     cidr_block = var.vpc_cidr_block
@@ -118,7 +120,7 @@ data "aws_ami" "latest-amazon-linux-image" {
     owners = ["amazon"]
     filter {
         name = "name"
-        values = ["amzn2-ami-kernel-*-x86_64-gp2"]
+        values = [var.image_name] # ["amzn2-ami-kernel-*-x86_64-gp2"]
     }
     filter {
         name = "virtualization-type"
@@ -171,7 +173,18 @@ resource "aws_instance" "montapp-server" {
     }
 }
 
-### Create a new securit group (not using the default one created when creating the vpc)
+resource "null_resource" "configure_server" {
+    triggers = {
+        trigger = aws_instance.montapp-server.public_ip
+    }
+
+    provisioner "local-exec" {
+        working_dir = "/home/montassar/devops-with-nana/ansible"
+        command = "ansible-playbook --inventory ${aws_instance.montapp-server.public_ip}, --private-key ${var.ssh_key_private} --user ec2-user deploy-docker-new-user.yaml" 
+    }
+}
+
+### Create a new security group (not using the default one created when creating the vpc)
 # resource "aws_security_group" "montapp-sg" {
 #     name = "montapp-sg"
 #     vpc_id = aws_vpc.montapp-vpc.id
