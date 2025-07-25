@@ -198,7 +198,7 @@ resource "aws_instance" "montapp-server-two" {
     # user_data_replace_on_change = true
 
     tags = {
-        Name: "${var.env_prefix}-server-two"
+        Name: "${var.env_prefix}-server"
     }
 }
 
@@ -226,10 +226,37 @@ resource "aws_instance" "montapp-server-three" {
     # user_data_replace_on_change = true
 
     tags = {
-        Name: "${var.env_prefix}-server-three"
+        Name: "prod-server"
     }
 }
 
+resource "aws_instance" "montapp-server-four" {
+    ami = data.aws_ami.latest-amazon-linux-image.id
+    instance_type = var.instance_type
+
+    subnet_id = aws_subnet.montapp-subnet-1.id
+    vpc_security_group_ids = [aws_default_security_group.default-sg.id]
+    availability_zone = var.avail_zone
+
+    associate_public_ip_address = true
+    key_name = aws_key_pair.ssh-key.key_name #"iac-server"
+
+    # user_data = <<EOF
+    #                 #!/bin/bash
+    #                 sudo yum update -y && sudo yum install -y docker
+    #                 sudo systemctl start docker
+    #                 sudo usermod -aG docker ec2-user
+    #                 docker run -p 8080:80 nginx
+    #             EOF
+
+    ### .sh scripts
+    # user_data = file("entry-script.sh")
+    # user_data_replace_on_change = true
+
+    tags = {
+        Name: "prod-server"
+    }
+}
 
 
 ### Hand control to ansible in terraform
