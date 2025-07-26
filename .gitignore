@@ -2,10 +2,12 @@ nodejs-app/
 template/
 *.pem
 
-terraform/.terraform/*
-terraform/.terraform.lock.hcl
-terraform/*.tfstate
-terraform/*.tfstate.*
-terraform/*.tfvars
+terraform/
+
+terraform-eks/.terraform/*
+terraform-eks/.terraform.lock.hcl
+terraform-eks/*.tfstate
+terraform-eks/*.tfstate.*
+terraform-eks/*.tfvars
 
 bootcamp-java-mysql-project/

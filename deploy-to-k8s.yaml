@@ -1,0 +1,18 @@
+---
+- name: Deploy app in a new namespace
+  hosts: localhost
+  tasks:
+    - name: Create a K8s namespace
+      kubernetes.core.k8s:
+        name: montapp
+        api_version: v1
+        kind: namespace
+        state: present
+        kubeconfig: /home/montassar/devops-with-nana/ansible/terraform-eks/kubeconfig_montapp-eks-cluster
+    - name: Deploy nginx app
+      kubernetes.core.k8s:
+        src: /home/montassar/devops-with-nana/ansible/terraform-eks/nginx.yaml
+        state: present
+        kubeconfig: /home/montassar/devops-with-nana/ansible/terraform-eks/kubeconfig_montapp-eks-cluster
+        namespace: montapp
+        
