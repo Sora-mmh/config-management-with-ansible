@@ -1,0 +1,4 @@
+- name: Create a new linux user
+  user:
+    name: montassar
+    groups: "{{user_groups}}" # groups is builtin variable

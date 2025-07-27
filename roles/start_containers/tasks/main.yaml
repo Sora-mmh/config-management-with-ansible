@@ -1,0 +1,16 @@
+- name: Copy docker compose
+  copy:
+    # src: /home/montassar/devops-with-nana/ansible/bootcamp-java-mysql-project/docker-compose-full.yaml
+    src : docker-compose.yaml
+    dest: /home/montassar/docker-compose.yaml
+
+- name: Docker login
+  docker_login: 
+    registry_url: "{{docker_registry}}" # https://index.docker.io/v1/
+    username: "{{docker_username}}" # sorammh8
+    password: "{{docker_password}}" # "{{docker_password_prompt}}"  for option 1 or {{docker_password}} for option 2
+
+- name: Start containers from compose
+  community.docker.docker_compose_v2:
+    project_src: /home/montassar
+    state: present

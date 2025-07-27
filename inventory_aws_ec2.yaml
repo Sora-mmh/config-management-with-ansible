@@ -5,9 +5,9 @@ regions:
 # filters:
 #   tag:Name: dev*
 #   instance-state-name: running
-keyed_groups:
-  - key: tags
-    prefix: tag # "tag"
-  - key: instance_type
-    prefix: instance_type
+# keyed_groups:
+#   - key: tags
+#     prefix: tag # "tag"
+#   - key: instance_type
+#     prefix: instance_type
   
