@@ -1,3 +1,9 @@
 nodejs-app/
 template/
 *.pem
+
+terraform/
+
+terraform-eks/
+
+bootcamp-java-mysql-project/
