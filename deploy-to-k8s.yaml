@@ -8,11 +8,13 @@
         api_version: v1
         kind: namespace
         state: present
-        kubeconfig: /home/montassar/devops-with-nana/ansible/terraform-eks/kubeconfig_montapp-eks-cluster
+        # do export K8S_AUTH_KUBECONFIG=/home/montassar/devops-with-nana/ansible/terraform-eks/kubeconfig_montapp-eks-cluster
+        # Instead of (declare at each task)
+        # kubeconfig: /home/montassar/devops-with-nana/ansible/terraform-eks/kubeconfig_montapp-eks-cluster
     - name: Deploy nginx app
       kubernetes.core.k8s:
         src: /home/montassar/devops-with-nana/ansible/terraform-eks/nginx.yaml
         state: present
-        kubeconfig: /home/montassar/devops-with-nana/ansible/terraform-eks/kubeconfig_montapp-eks-cluster
+        # kubeconfig: /home/montassar/devops-with-nana/ansible/terraform-eks/kubeconfig_montapp-eks-cluster
         namespace: montapp
         

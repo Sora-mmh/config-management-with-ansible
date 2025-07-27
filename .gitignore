@@ -4,11 +4,6 @@ template/
 
 terraform/
 
-terraform-eks/kubeconfig_montapp-eks-cluster
-terraform-eks/.terraform/*
-terraform-eks/.terraform.lock.hcl
-terraform-eks/*.tfstate
-terraform-eks/*.tfstate.*
-terraform-eks/*.tfvars
+terraform-eks/
 
 bootcamp-java-mysql-project/
