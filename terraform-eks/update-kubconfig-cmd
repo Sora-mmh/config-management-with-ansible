@@ -1,0 +1,1 @@
+aws eks update-kubeconfig --region eu-north-1 --name montapp-eks-cluster --kubeconfig /home/montassar/devops-with-nana/ansible/terraform-eks/kubeconfig_montapp-eks-cluster

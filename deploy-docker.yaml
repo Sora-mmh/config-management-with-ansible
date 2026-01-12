@@ -1,0 +1,76 @@
+---
+- name: Install Docker
+  hosts: docker_server
+  become: yes
+  # become_user: root
+  tasks:
+    - name: Make sur Docker is installed
+      yum:  
+        name: docker
+        update_cache: yes
+        state: present
+    - name: Ensure docker is running
+      systemd:
+        name: docker
+        state: started
+
+- name: Install Docker-compose
+  hosts: docker_server
+  tasks:
+    - name: Create docker-compose directory
+      file:
+        path: ~/.docker/cli-plugins
+        state: directory
+    - name: Get architecture of remote machine
+      shell: uname -m
+      register: remote_arch
+    - name: Install docker-compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-{{remote_arch.stdout}}"
+        dest: ~/.docker/cli-plugins/docker-compose
+        mode: +x
+  
+- name: Add ec2-user to docker group
+  hosts: docker_server
+  become: yes
+  tasks:
+    - name: Add ec2-user to docker group
+      user: 
+        name: ec2-user
+        groups: docker
+        append: yes
+    - name: Reconnect to server session
+      meta: reset_connection
+
+# - name: Test docker pull
+#   hosts: docker_server
+#   tasks:
+#     - name: Pull redis
+#       docker_image:
+#         name: redis
+#         source: pull
+
+- name: Start docker containers
+  hosts: docker_server
+  ### Option 1 for PASS to login into dockerhub
+  vars_prompt:
+    - name: docker_password
+      prompt: Enter password for docker registry
+  ### Option 2 for PASS to login into dockerhub
+  # vars_files:
+  #   - project-vars
+  tasks:
+    - name: Copy docker compose
+      copy:
+        src: /home/montassar/devops-with-nana/ansible/bootcamp-java-mysql-project/docker-compose-full.yaml
+        dest: /home/ec2-user/docker-compose.yaml
+    - name: Docker login
+      docker_login: 
+        username: sorammh8
+        password: "{{docker_password}}"
+    - name: Start containers from compose
+      community.docker.docker_compose_v2:
+        project_src: /home/ec2-user
+        state: present
+
+
