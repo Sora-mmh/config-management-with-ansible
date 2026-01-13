@@ -1,0 +1,100 @@
+---
+- name: Wait for SSH connection
+  hosts: all
+  gather_facts: False
+  vars:
+      ansible_connection: local
+      ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: Ensure SSH port open
+      wait_for:
+        port: 22
+        delay: 10
+        timeout: 100
+        search_regex: OpenSSH
+        host: '{{ (ansible_ssh_host|default(ansible_host))|default(inventory_hostname) }}'
+    
+- name: Install Docker
+  hosts: all # dcoker_server
+  become: yes
+  # become_user: root
+  tasks:
+    - name: Make sur Docker is installed
+      yum:  
+        name: docker
+        update_cache: yes
+        state: present
+    - name: Ensure docker is running
+      systemd:
+        name: docker
+        state: started
+
+- name: Create a new linux user
+  hosts: all
+  become: yes
+  vars_files:
+    project-vars
+  tasks:
+    - name: Create a new linux user
+      user:
+        name: "{{linux_name}}"
+        groups: "{{user_groups}}"
+
+- name: Install Docker-compose
+  hosts: all
+  become: yes
+  vars_files:
+    project-vars
+  become_user: "{{linux_name}}"
+  tasks:
+    - name: Create docker-compose directory
+      file:
+        path: ~/.docker/cli-plugins
+        state: directory
+    - name: Get architecture of remote machine
+      shell: uname -m
+      register: remote_arch
+    - name: Install docker-compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/latest/download/docker-compose-linux-{{remote_arch.stdout}}"
+        dest: ~/.docker/cli-plugins/docker-compose
+        mode: +x
+
+# - name: Test docker pull
+#   hosts: all
+#   tasks:
+#     - name: Pull redis
+#       docker_image:
+#         name: redis
+#         source: pull
+
+- name: Start docker containers
+  hosts: all
+  become: yes
+  vars_files:
+    project-vars
+  ### Option 1 for PASS to login into dockerhub
+  vars_prompt:
+    - name: docker_password_prompt
+      prompt: Enter password for docker registry
+  ### Option 2 for PASS to login into dockerhub
+  # vars_files:
+  #   - project-vars
+  vars_files:
+    project-vars
+  become_user: "{{linux_name}}"
+  tasks:
+    - name: Copy docker compose
+      copy:
+        src: /home/montassar/devops-with-nana/ansible/bootcamp-java-mysql-project/docker-compose-full.yaml
+        dest: /home/{{linux_name}}/docker-compose.yaml
+    - name: Docker login
+      docker_login: 
+        username: sorammh8
+        password: "{{docker_password}}" # "{{docker_password_prompt}}" # or {{docker_password}} for option 2
+    - name: Start containers from compose
+      community.docker.docker_compose_v2:
+        project_src: /home/{{linux_name}}
+        state: present
+
+

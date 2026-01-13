@@ -2,3 +2,6 @@ linux_name: montassar
 location: /home/{{linux_name}}/devops-with-nana/ansible/nodejs-app
 version: 1.0.0
 destination: /home/{{linux_name}}
+
+docker_password: password******
+user_groups: adm,docker
